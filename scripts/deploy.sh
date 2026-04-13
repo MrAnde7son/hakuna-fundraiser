@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# Build + push images and roll Cloud Run + the worker VM. Idempotent — safe to
+# run from a laptop or from CI (auth is whatever gcloud has).
+set -euo pipefail
+
+PROJECT_ID="${PROJECT_ID:-hakuna-prod-2026}"
+REGION="${REGION:-me-west1}"
+ZONE="${ZONE:-me-west1-b}"
+REPO="${REPO:-hakuna-fundraiser}"
+
+REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}"
+TAG="${GITHUB_SHA:-$(git rev-parse --short HEAD)}"
+
+API_IMAGE="${REGISTRY}/api:${TAG}"
+FRONTEND_IMAGE="${REGISTRY}/frontend:${TAG}"
+
+echo "==> Configuring Docker auth for ${REGION}-docker.pkg.dev"
+gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+echo "==> Discovering API URL for frontend build"
+API_URL="$(gcloud run services describe fundraiser-api --region "$REGION" --format='value(status.url)' 2>/dev/null || echo '')"
+if [ -z "$API_URL" ]; then
+  echo "    fundraiser-api not deployed yet — frontend will use relative /api"
+fi
+
+echo "==> Building images"
+docker build --platform linux/amd64 -t "$API_IMAGE" -t "${REGISTRY}/api:latest" backend
+docker build --platform linux/amd64 \
+  --build-arg "VITE_API_URL=${API_URL}" \
+  -f frontend/Dockerfile.prod \
+  -t "$FRONTEND_IMAGE" -t "${REGISTRY}/frontend:latest" frontend
+
+echo "==> Pushing images"
+docker push "$API_IMAGE"
+docker push "${REGISTRY}/api:latest"
+docker push "$FRONTEND_IMAGE"
+docker push "${REGISTRY}/frontend:latest"
+
+echo "==> Deploying Cloud Run: fundraiser-api"
+gcloud run deploy fundraiser-api \
+  --image "$API_IMAGE" \
+  --region "$REGION" \
+  --quiet
+
+echo "==> Deploying Cloud Run: fundraiser-frontend"
+gcloud run deploy fundraiser-frontend \
+  --image "$FRONTEND_IMAGE" \
+  --region "$REGION" \
+  --quiet
+
+echo "==> Rolling worker VM (re-runs startup script, pulls new image)"
+# `instances reset` re-runs the startup script which pulls $API_IMAGE :latest.
+gcloud compute instances reset fundraiser-worker --zone "$ZONE" --quiet || \
+  echo "    worker VM not yet created — skip (run terraform apply first)"
+
+echo "==> Done. API: $(gcloud run services describe fundraiser-api --region "$REGION" --format='value(status.url)')"

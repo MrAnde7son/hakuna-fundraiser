@@ -1,0 +1,20 @@
+project_id = "hakuna-prod-2026"
+region     = "me-west1"
+zone       = "me-west1-b"
+
+# Push images to Artifact Registry first, then set tags here. CI overrides
+# these on every deploy via -var, so the value here is just the bootstrap.
+api_image      = "me-west1-docker.pkg.dev/hakuna-prod-2026/hakuna-fundraiser/api:latest"
+frontend_image = "me-west1-docker.pkg.dev/hakuna-prod-2026/hakuna-fundraiser/frontend:latest"
+
+# Required
+anthropic_api_key = "sk-ant-..."
+
+# Optional — leave empty to disable that enrichment source
+crunchbase_api_key = ""
+proxycurl_api_key  = ""
+exa_api_key        = ""
+tavily_api_key     = ""
+slack_webhook_url  = ""
+
+github_repo = "MrAnde7son/hakuna-fundraiser"
