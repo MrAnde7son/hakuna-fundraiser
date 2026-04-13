@@ -22,7 +22,7 @@ export default function SpaceCoverageGrid({ coverage }) {
   const spaces = Object.keys(coverage).map((key) => ({ key, label: humanize(key) }))
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
       {spaces.map((space) => {
         const active = coverage[space.key]
         return (

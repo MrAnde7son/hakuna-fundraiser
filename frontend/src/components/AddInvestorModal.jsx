@@ -23,8 +23,8 @@ export default function AddInvestorModal({ onClose }) {
   })
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg p-6" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-t-xl sm:rounded-xl shadow-2xl w-full max-w-lg p-5 sm:p-6 max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">Add Investors</h2>
 
         <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1">

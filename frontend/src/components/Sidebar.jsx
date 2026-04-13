@@ -62,67 +62,97 @@ function Logo() {
   )
 }
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose = () => {} }) {
   return (
-    <aside className="w-60 shrink-0 flex flex-col text-white relative overflow-hidden
-                      bg-gradient-to-b from-hakuna-900 via-hakuna-950 to-ink-950">
-      {/* ambient glow */}
-      <div className="pointer-events-none absolute -top-24 -left-16 w-64 h-64 rounded-full bg-hakuna-500/20 blur-3xl"/>
-      <div className="pointer-events-none absolute bottom-0 -right-16 w-64 h-64 rounded-full bg-savanna-500/10 blur-3xl"/>
+    <>
+      {/* Mobile backdrop */}
+      <div
+        onClick={onClose}
+        className={clsx(
+          'md:hidden fixed inset-0 z-30 bg-black/50 transition-opacity',
+          open ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        )}
+        aria-hidden="true"
+      />
 
-      <div className="relative p-5 border-b border-white/5">
-        <Logo />
-      </div>
+      <aside
+        className={clsx(
+          'flex flex-col text-white overflow-hidden bg-gradient-to-b from-hakuna-900 via-hakuna-950 to-ink-950',
+          // Mobile: fixed drawer
+          'fixed inset-y-0 left-0 z-40 w-64 transform transition-transform duration-200 ease-out',
+          open ? 'translate-x-0' : '-translate-x-full',
+          // Desktop: static in flex layout
+          'md:static md:translate-x-0 md:w-60 md:shrink-0 md:z-auto'
+        )}
+      >
+        {/* ambient glow */}
+        <div className="pointer-events-none absolute -top-24 -left-16 w-64 h-64 rounded-full bg-hakuna-500/20 blur-3xl"/>
+        <div className="pointer-events-none absolute bottom-0 -right-16 w-64 h-64 rounded-full bg-savanna-500/10 blur-3xl"/>
 
-      <nav className="relative flex-1 px-3 py-4 space-y-0.5">
-        <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-hakuna-300/60">
-          Workspace
-        </div>
-        {NAV.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              clsx(
-                'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all',
-                isActive
-                  ? 'bg-white/[0.08] text-white shadow-inner'
-                  : 'text-hakuna-200/80 hover:bg-white/[0.04] hover:text-white'
-              )
-            }
+        <div className="relative p-5 border-b border-white/5 flex items-center justify-between">
+          <Logo />
+          <button
+            onClick={onClose}
+            className="md:hidden text-hakuna-200/80 hover:text-white p-1 -mr-1"
+            aria-label="Close menu"
           >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-savanna-400"/>
-                )}
-                <span className={clsx(
-                  'flex items-center justify-center rounded-md w-7 h-7 transition-colors',
-                  isActive ? 'bg-hakuna-500/20 text-hakuna-100' : 'text-hakuna-300/80 group-hover:text-white'
-                )}>
-                  {item.icon}
-                </span>
-                <span className="font-medium">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="relative mx-3 mb-3 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"/>
-          <span className="text-[11px] font-medium text-hakuna-100">Enrichment live</span>
+            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" className="w-5 h-5">
+              <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+          </button>
         </div>
-        <p className="text-[11px] leading-snug text-hakuna-300/80">
-          Signals refresh every 10s across all tracked funds.
-        </p>
-      </div>
 
-      <div className="relative px-5 py-3 border-t border-white/5 flex items-center justify-between">
-        <span className="text-[10.5px] text-hakuna-300/60">Hakuna Fundraise</span>
-        <span className="text-[10.5px] font-mono text-hakuna-300/50">v1.0</span>
-      </div>
-    </aside>
+        <nav className="relative flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          <div className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-hakuna-300/60">
+            Workspace
+          </div>
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onClose}
+              className={({ isActive }) =>
+                clsx(
+                  'group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all',
+                  isActive
+                    ? 'bg-white/[0.08] text-white shadow-inner'
+                    : 'text-hakuna-200/80 hover:bg-white/[0.04] hover:text-white'
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-savanna-400"/>
+                  )}
+                  <span className={clsx(
+                    'flex items-center justify-center rounded-md w-7 h-7 transition-colors',
+                    isActive ? 'bg-hakuna-500/20 text-hakuna-100' : 'text-hakuna-300/80 group-hover:text-white'
+                  )}>
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="relative mx-3 mb-3 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"/>
+            <span className="text-[11px] font-medium text-hakuna-100">Enrichment live</span>
+          </div>
+          <p className="text-[11px] leading-snug text-hakuna-300/80">
+            Signals refresh every 10s across all tracked funds.
+          </p>
+        </div>
+
+        <div className="relative px-5 py-3 border-t border-white/5 flex items-center justify-between">
+          <span className="text-[10.5px] text-hakuna-300/60">Hakuna Fundraise</span>
+          <span className="text-[10.5px] font-mono text-hakuna-300/50">v1.0</span>
+        </div>
+      </aside>
+    </>
   )
 }
