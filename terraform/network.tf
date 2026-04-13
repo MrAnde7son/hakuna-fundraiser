@@ -2,7 +2,7 @@
 # main hakuna stack (which uses its own VPC in a different project).
 
 resource "google_compute_network" "main" {
-  name                    = "fundraiser-vpc"
+  name                    = "fundraiser-vpc-v2"
   auto_create_subnetworks = false
 
   depends_on = [google_project_service.apis]
@@ -19,7 +19,7 @@ resource "google_compute_subnetwork" "main" {
 
 # Private service connection — required for Cloud SQL and Memorystore private IPs.
 resource "google_compute_global_address" "private_ip_range" {
-  name          = "fundraiser-private-ip-range"
+  name          = "fundraiser-private-ip-range-v2"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16

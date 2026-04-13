@@ -8,6 +8,11 @@ output "frontend_url" {
   description = "Cloud Run URL for the React frontend (public)"
 }
 
+output "frontend_custom_domain" {
+  value       = "https://${var.app_domain}"
+  description = "Custom domain — live once Google-managed cert finishes provisioning (~15 min after DNS resolves)"
+}
+
 output "artifact_registry_url" {
   value       = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.main.repository_id}"
   description = "Docker registry URL — prefix for image tags"

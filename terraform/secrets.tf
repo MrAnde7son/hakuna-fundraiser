@@ -4,7 +4,9 @@
 
 resource "google_secret_manager_secret" "database_url" {
   secret_id = "fundraiser-database-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 
 resource "google_secret_manager_secret_version" "database_url" {
@@ -15,7 +17,9 @@ resource "google_secret_manager_secret_version" "database_url" {
 # Sync DSN for Celery (uses psycopg, not asyncpg).
 resource "google_secret_manager_secret" "celery_database_url" {
   secret_id = "fundraiser-celery-database-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 
 resource "google_secret_manager_secret_version" "celery_database_url" {
@@ -26,7 +30,9 @@ resource "google_secret_manager_secret_version" "celery_database_url" {
 # Direct DSN for the worker VM (private IP, no proxy needed).
 resource "google_secret_manager_secret" "worker_database_url" {
   secret_id = "fundraiser-worker-database-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 
 resource "google_secret_manager_secret_version" "worker_database_url" {
@@ -36,7 +42,9 @@ resource "google_secret_manager_secret_version" "worker_database_url" {
 
 resource "google_secret_manager_secret" "redis_url" {
   secret_id = "fundraiser-redis-url"
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 
 resource "google_secret_manager_secret_version" "redis_url" {
@@ -60,7 +68,9 @@ locals {
 resource "google_secret_manager_secret" "app" {
   for_each  = local.app_secrets
   secret_id = each.key
-  replication { auto {} }
+  replication {
+    auto {}
+  }
 }
 
 resource "google_secret_manager_secret_version" "app" {

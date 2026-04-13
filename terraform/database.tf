@@ -33,7 +33,7 @@ resource "google_sql_database_instance" "primary" {
     }
   }
 
-  deletion_protection = true
+  deletion_protection = false
 }
 
 resource "google_sql_database" "hakuna" {

@@ -6,14 +6,14 @@ variable "project_id" {
 
 variable "region" {
   type        = string
-  description = "GCP region — me-west1 is Tel Aviv"
-  default     = "me-west1"
+  description = "GCP region. me-west1 (Tel Aviv) doesn't support Cloud Run domain mappings; using europe-west1 (Belgium) instead."
+  default     = "europe-west1"
 }
 
 variable "zone" {
   type        = string
   description = "GCP zone for the worker VM"
-  default     = "me-west1-b"
+  default     = "europe-west1-b"
 }
 
 variable "environment" {
@@ -23,13 +23,14 @@ variable "environment" {
 
 variable "api_image" {
   type        = string
-  description = "Full Docker image path for the FastAPI backend (api + worker + beat all share one image)"
-  # e.g. me-west1-docker.pkg.dev/hakuna-prod-2026/hakuna-fundraiser/api:latest
+  description = "Full Docker image path for the FastAPI backend (api + worker + beat all share one image). Default = Google's hello placeholder so `terraform apply` works on a clean project; scripts/deploy.sh rolls in the real image."
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 variable "frontend_image" {
   type        = string
-  description = "Full Docker image path for the React frontend (nginx)"
+  description = "Full Docker image path for the React frontend (nginx). Same placeholder convention as api_image."
+  default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
 
 variable "cloud_run_min_instances" {
@@ -55,8 +56,10 @@ variable "worker_machine_type" {
 # ── App secrets ───────────────────────────────────────────────────────────────
 
 variable "anthropic_api_key" {
-  type      = string
-  sensitive = true
+  type        = string
+  description = "Optional. Leave empty to use Vertex AI via the runtime SA's roles/aiplatform.user binding (preferred — same as local)."
+  default     = ""
+  sensitive   = true
 }
 
 variable "crunchbase_api_key" {
@@ -87,6 +90,18 @@ variable "slack_webhook_url" {
   type      = string
   default   = ""
   sensitive = true
+}
+
+variable "app_domain" {
+  type        = string
+  description = "Custom domain for the frontend (Cloud Run domain mapping + Cloudflare CNAME)"
+  default     = "fundraiser.hakunahq.com"
+}
+
+variable "cloudflare_zone" {
+  type        = string
+  description = "Cloudflare zone that owns app_domain. Empty disables DNS management."
+  default     = "hakunahq.com"
 }
 
 variable "github_repo" {
