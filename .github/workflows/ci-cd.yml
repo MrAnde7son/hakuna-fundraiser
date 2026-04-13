@@ -41,8 +41,8 @@ jobs:
       - name: Deploy
         env:
           PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'hakuna-prod-2026' }}
-          REGION: ${{ vars.GCP_REGION || 'me-west1' }}
-          ZONE: ${{ vars.GCP_ZONE || 'me-west1-b' }}
+          REGION: ${{ vars.GCP_REGION || 'europe-west1' }}
+          ZONE: ${{ vars.GCP_ZONE || 'europe-west1-b' }}
           REPO: hakuna-fundraiser
           GITHUB_SHA: ${{ github.sha }}
         run: scripts/deploy.sh

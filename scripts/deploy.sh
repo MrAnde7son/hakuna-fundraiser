@@ -4,8 +4,8 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-hakuna-prod-2026}"
-REGION="${REGION:-me-west1}"
-ZONE="${ZONE:-me-west1-b}"
+REGION="${REGION:-europe-west1}"
+ZONE="${ZONE:-europe-west1-b}"
 REPO="${REPO:-hakuna-fundraiser}"
 
 REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}"
