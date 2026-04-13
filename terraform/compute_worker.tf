@@ -27,14 +27,17 @@ locals {
 
     # Pull secrets at boot — refreshed on every restart, so rotating a secret
     # only requires `gcloud compute instances reset`.
+    # Tokens endpoint returns compact JSON; Secret Manager returns pretty-
+    # printed JSON with whitespace, so both sed patterns tolerate optional
+    # whitespace around the colon.
     TOKEN=$(curl -sfH "Metadata-Flavor: Google" \
       http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
-      | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+      | sed -n 's/.*"access_token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
 
     fetch_secret() {
       curl -sfH "Authorization: Bearer $TOKEN" \
         "https://secretmanager.googleapis.com/v1/projects/${var.project_id}/secrets/$1/versions/latest:access" \
-        | sed -n 's/.*"data":"\([^"]*\)".*/\1/p' \
+        | sed -n 's/.*"data"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' \
         | base64 -d
     }
 
