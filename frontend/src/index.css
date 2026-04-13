@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  body {
+    @apply text-ink-900 antialiased;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    @apply tracking-tight text-ink-900;
+  }
+  /* refined scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { @apply bg-ink-200 rounded-full; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-ink-300; }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-ink-100 shadow-soft;
+  }
+  .card-hover {
+    @apply transition-all hover:shadow-lift hover:border-ink-200;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-hakuna-700 text-white hover:bg-hakuna-800 shadow-soft hover:shadow-glow;
+  }
+  .btn-secondary {
+    @apply btn bg-white border border-ink-200 text-ink-700 hover:border-ink-300 hover:bg-ink-50 shadow-soft;
+  }
+  .btn-ghost {
+    @apply btn text-ink-600 hover:bg-ink-100 hover:text-ink-900;
+  }
+  .input {
+    @apply bg-white border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400
+           focus:outline-none focus:border-hakuna-500 focus:ring-4 focus:ring-hakuna-500/10 transition;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  }
+  .page-shell {
+    @apply relative min-h-full bg-hakuna-radial;
+  }
+  .page-shell::before {
+    content: '';
+    @apply absolute inset-0 bg-grid-ink bg-grid-sm opacity-60 pointer-events-none;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 20%, transparent 70%);
+  }
+  .page-content {
+    @apply relative z-10;
+  }
+}
