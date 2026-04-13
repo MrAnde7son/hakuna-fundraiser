@@ -7,34 +7,42 @@
 # (or the deploy.sh script does this automatically.)
 
 locals {
+  # COS doesn't ship gcloud, so AR auth uses the preinstalled
+  # docker-credential-gcr helper and secrets are fetched directly from the
+  # Secret Manager REST API with a metadata-server access token.
   worker_startup_script = <<-EOT
     #!/bin/bash
-    set -euxo pipefail
+    set -euo pipefail
     exec > >(tee -a /var/log/startup-script.log) 2>&1
 
-    # Install Docker if missing (Container-Optimized OS already has it).
-    if ! command -v docker >/dev/null; then
-      apt-get update
-      apt-get install -y docker.io
-    fi
-
-    # Auth to Artifact Registry using the VM's service account.
-    gcloud auth configure-docker ${var.region}-docker.pkg.dev --quiet
+    # Configure Docker to use the GCR credential helper for Artifact Registry.
+    docker-credential-gcr configure-docker --registries=${var.region}-docker.pkg.dev
 
     IMAGE="${var.api_image}"
     docker pull "$IMAGE"
 
     # Pull secrets at boot — refreshed on every restart, so rotating a secret
     # only requires `gcloud compute instances reset`.
-    DATABASE_URL=$(gcloud secrets versions access latest --secret=fundraiser-worker-database-url)
-    CELERY_DATABASE_URL=$(gcloud secrets versions access latest --secret=fundraiser-celery-database-url)
-    REDIS_URL=$(gcloud secrets versions access latest --secret=fundraiser-redis-url)
-    ANTHROPIC_API_KEY=$(gcloud secrets versions access latest --secret=fundraiser-anthropic-api-key)
-    CRUNCHBASE_API_KEY=$(gcloud secrets versions access latest --secret=fundraiser-crunchbase-api-key)
-    PROXYCURL_API_KEY=$(gcloud secrets versions access latest --secret=fundraiser-proxycurl-api-key)
-    EXA_API_KEY=$(gcloud secrets versions access latest --secret=fundraiser-exa-api-key)
-    TAVILY_API_KEY=$(gcloud secrets versions access latest --secret=fundraiser-tavily-api-key)
-    SLACK_WEBHOOK_URL=$(gcloud secrets versions access latest --secret=fundraiser-slack-webhook-url)
+    TOKEN=$(curl -sfH "Metadata-Flavor: Google" \
+      http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token \
+      | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+
+    fetch_secret() {
+      curl -sfH "Authorization: Bearer $TOKEN" \
+        "https://secretmanager.googleapis.com/v1/projects/${var.project_id}/secrets/$1/versions/latest:access" \
+        | sed -n 's/.*"data":"\([^"]*\)".*/\1/p' \
+        | base64 -d
+    }
+
+    DATABASE_URL=$(fetch_secret fundraiser-worker-database-url)
+    CELERY_DATABASE_URL=$(fetch_secret fundraiser-celery-database-url)
+    REDIS_URL=$(fetch_secret fundraiser-redis-url)
+    ANTHROPIC_API_KEY=$(fetch_secret fundraiser-anthropic-api-key)
+    CRUNCHBASE_API_KEY=$(fetch_secret fundraiser-crunchbase-api-key)
+    PROXYCURL_API_KEY=$(fetch_secret fundraiser-proxycurl-api-key)
+    EXA_API_KEY=$(fetch_secret fundraiser-exa-api-key)
+    TAVILY_API_KEY=$(fetch_secret fundraiser-tavily-api-key)
+    SLACK_WEBHOOK_URL=$(fetch_secret fundraiser-slack-webhook-url)
 
     cat > /etc/fundraiser.env <<EOF
 DATABASE_URL=$DATABASE_URL
