@@ -1,6 +1,10 @@
 """Seed data endpoint for initial investor import."""
 from __future__ import annotations
+
+import csv
 import logging
+from functools import lru_cache
+from pathlib import Path
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -13,75 +17,55 @@ from app.tasks.worker import enrich_investor_task
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/seed", tags=["seed"])
 
-SEED_INVESTORS = [
-    {"name": "Cyberstarts", "website": "https://cyberstarts.com"},
-    {"name": "YL Ventures", "website": "https://ylventures.com"},
-    {"name": "Ballistic Ventures", "website": "https://www.ballisticventures.com"},
-    {"name": "SYN Ventures", "website": "https://www.synventures.com"},
-    {"name": "Team8", "website": "https://team8.vc"},
-    {"name": "Ten Eleven Ventures", "website": "https://www.teneventures.com"},
-    {"name": "Glilot Capital", "website": "https://www.glilotcapital.com"},
-    {"name": "Hetz Ventures", "website": "https://hetz.vc"},
-    {"name": "Vesey Ventures", "website": "https://veseyventures.com"},
-    {"name": "Menlo Ventures", "website": "https://www.menlovc.com"},
-    {"name": "NFX", "website": "https://www.nfx.com"},
-    {"name": "Blumberg Capital", "website": "https://blumbergcapital.com"},
-    {"name": "TLV Partners", "website": "https://www.tlv.partners"},
-    {"name": "New Era Ventures", "website": "https://www.neweracap.com"},
-    {"name": "Leaders Fund", "website": "https://leadersfund.com"},
-    {"name": "Sequoia", "website": "https://www.sequoiacap.com"},
-    {"name": "Accel", "website": "https://www.accel.com"},
-    {"name": "Lightspeed", "website": "https://lsvp.com"},
-    {"name": "Index Ventures", "website": "https://www.indexventures.com"},
-    {"name": "Bessemer", "website": "https://www.bvp.com"},
-    {"name": "Felicis", "website": "https://www.felicis.com"},
-    {"name": "Greylock", "website": "https://greylock.com"},
-    {"name": "Insight Partners", "website": "https://www.insightpartners.com"},
-    {"name": "Intel Capital", "website": "https://www.intelcapital.com"},
-    {"name": "Notable Ventures", "website": "https://notablecap.com"},
-    {"name": "Striker Capital", "website": "https://strikercapital.com"},
-    {"name": "DTC Capital", "website": "https://www.dtcapital.com"},
-    {"name": "Lama Partners", "website": "https://lamapartners.com"},
-    {"name": "Vine Ventures", "website": "https://www.vinevc.com"},
-    {"name": "Jibe Ventures", "website": "https://www.jibeventures.com"},
-    {"name": "83North", "website": "https://www.83north.com"},
-    {"name": "Craft Ventures", "website": "https://www.craftventures.com"},
-    {"name": "Viola Ventures", "website": "https://www.viola-group.com"},
-    {"name": "F2", "website": "https://f2vc.com"},
-    {"name": "Holly Ventures", "website": "https://holly.vc"},
-    {"name": "White Rabbit", "website": "https://www.whiterabbit.vc"},
-    {"name": "Picture Capital", "website": "https://picture.capital"},
-    {"name": "Battery Ventures", "website": "https://www.battery.com"},
-    {"name": "Amiti VC", "website": "https://amiti.vc"},
-    {"name": "Evolution Equity Partners", "website": "https://www.evolutionequity.com"},
-    {"name": "CRV", "website": "https://www.crv.com"},
-    {"name": "Ibex", "website": "https://ibexinvestors.com"},
-    {"name": "Cyber Club London", "website": "https://cyberclub.london"},
-    {"name": "Grove Ventures", "website": "https://www.grove.vc"},
-    {"name": "Tenable Ventures", "website": "https://www.tenable.com/partners/venture"},
-    {"name": "Stage One", "website": "https://www.stageonevc.com"},
-    {"name": "Hanaco", "website": "https://hanacovc.com"},
-    {"name": "Bullet VC", "website": "https://bullet.vc"},
-    {"name": "Meron Capital", "website": "https://meroncapital.com"},
-    {"name": "mtf.vc", "website": "https://mtf.vc"},
-]
+SEED_CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "seed_investors.csv"
+
+
+@lru_cache(maxsize=1)
+def load_seed_investors() -> list[dict]:
+    """Load seed investors from the CSV bundled with the app."""
+    with SEED_CSV_PATH.open(newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+
+    entries: list[dict] = []
+    for row in rows:
+        name = (row.get("name") or "").strip()
+        if not name:
+            continue
+        type_raw = (row.get("type") or "vc").strip().lower()
+        try:
+            inv_type = InvestorType(type_raw)
+        except ValueError:
+            inv_type = InvestorType.vc
+        entries.append({
+            "name": name,
+            "type": inv_type,
+            "website": (row.get("website") or "").strip() or None,
+            "contact": (row.get("contact") or "").strip() or None,
+            "stage_focus": (row.get("stage") or "").strip() or None,
+            "notes": (row.get("notes") or "").strip() or None,
+        })
+    return entries
 
 
 async def seed_investors_on_startup() -> None:
     """Auto-seed the database with initial investors on application startup."""
+    seed_entries = load_seed_investors()
     async with async_session() as db:
         existing = await db.execute(select(Investor).limit(1))
         if existing.scalar_one_or_none():
             logger.info("Database already has investors, skipping auto-seed")
             return
 
-        logger.info("Seeding database with %d investors", len(SEED_INVESTORS))
+        logger.info("Seeding database with %d investors", len(seed_entries))
         created_ids = []
-        for entry in SEED_INVESTORS:
+        for entry in seed_entries:
             investor = Investor(
                 name=entry["name"],
-                type=InvestorType.vc,
-                website=entry.get("website"),
+                type=entry["type"],
+                website=entry["website"],
+                contact=entry["contact"],
+                stage_focus=entry["stage_focus"],
+                notes=entry["notes"],
             )
             db.add(investor)
             await db.flush()
@@ -108,15 +92,23 @@ async def seed_investors(
     updated = []
     skipped = []
 
-    for entry in SEED_INVESTORS:
+    for entry in load_seed_investors():
         name = entry["name"]
         result = await db.execute(select(Investor).where(Investor.name == name))
         existing = result.scalar_one_or_none()
         if existing:
-            # Update existing investor with any new fields from seed data
             changed = False
-            if entry.get("website") and not existing.website:
+            if entry["website"] and not existing.website:
                 existing.website = entry["website"]
+                changed = True
+            if entry["contact"] and not existing.contact:
+                existing.contact = entry["contact"]
+                changed = True
+            if entry["stage_focus"] and not existing.stage_focus:
+                existing.stage_focus = entry["stage_focus"]
+                changed = True
+            if entry["notes"] and not existing.notes:
+                existing.notes = entry["notes"]
                 changed = True
             if changed:
                 updated.append({"id": existing.id, "name": name})
@@ -126,8 +118,11 @@ async def seed_investors(
 
         investor = Investor(
             name=name,
-            type=InvestorType.vc,
-            website=entry.get("website"),
+            type=entry["type"],
+            website=entry["website"],
+            contact=entry["contact"],
+            stage_focus=entry["stage_focus"],
+            notes=entry["notes"],
         )
         db.add(investor)
         await db.flush()
