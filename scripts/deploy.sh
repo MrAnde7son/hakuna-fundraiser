@@ -48,9 +48,21 @@ gcloud run deploy fundraiser-frontend \
   --region "$REGION" \
   --quiet
 
+echo "==> Syncing worker VM metadata to new image tag (terraform)"
+# The worker VM bakes $IMAGE into its startup-script metadata, so a bare
+# `instances reset` would re-pull whatever image TF was last applied with.
+# Run a targeted apply so the VM is recreated with the new image baked in.
+# (Cloud Run has ignore_changes on its image field, so this won't fight the
+# `gcloud run deploy` above.)
+terraform -chdir=terraform apply -auto-approve \
+  -var "api_image=${API_IMAGE}" \
+  -var "frontend_image=${FRONTEND_IMAGE}" \
+  -target=google_compute_instance.worker
+
 echo "==> Rolling worker VM (re-runs startup script, pulls new image)"
-# `instances reset` re-runs the startup script which pulls $API_IMAGE :latest.
+# If TF already recreated the VM above this is a no-op safety net; if TF
+# decided not to recreate (e.g. same image tag), this forces a fresh pull.
 gcloud compute instances reset fundraiser-worker --zone "$ZONE" --quiet || \
-  echo "    worker VM not yet created — skip (run terraform apply first)"
+  echo "    worker VM not yet created — skip"
 
 echo "==> Done. API: $(gcloud run services describe fundraiser-api --region "$REGION" --format='value(status.url)')"

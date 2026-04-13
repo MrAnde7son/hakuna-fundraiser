@@ -16,6 +16,10 @@ locals {
     exec > >(tee -a /var/log/startup-script.log) 2>&1
 
     # Configure Docker to use the GCR credential helper for Artifact Registry.
+    # COS has a read-only /root, so point HOME at a writable location for the
+    # credential helper's config.json (docker then reads it via $HOME/.docker).
+    export HOME=/var/lib/docker-cred
+    mkdir -p "$HOME/.docker"
     docker-credential-gcr configure-docker --registries=${var.region}-docker.pkg.dev
 
     IMAGE="${var.api_image}"
