@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """Seed data endpoint for initial investor import."""
+from __future__ import annotations
 import logging
 
 from fastapi import APIRouter, Depends

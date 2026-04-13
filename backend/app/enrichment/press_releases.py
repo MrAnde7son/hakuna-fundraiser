@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Press release scraping and investment event extraction.
 
 Scrapes the investor's website for press releases / blog posts announcing
@@ -9,6 +7,7 @@ Supports two discovery methods:
   1. RSS/Atom feed auto-discovery + PR newswire feeds
   2. HTML scraping of news/press pages (original approach)
 """
+from __future__ import annotations
 import logging
 import re
 from datetime import date

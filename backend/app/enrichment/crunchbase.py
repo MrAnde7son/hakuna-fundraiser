@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 """Crunchbase Basic API enrichment.
 
 Fetches fund size, founding year, investment count, portfolio companies,
 recent investments, and partner names.
 """
+from __future__ import annotations
 import logging
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type

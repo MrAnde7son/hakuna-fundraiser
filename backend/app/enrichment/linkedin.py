@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 """LinkedIn enrichment via Proxycurl API.
 
 Fetches partner profiles: current title, past investments,
 shared connections with Itamar.
 """
+from __future__ import annotations
 import logging
 import httpx
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type

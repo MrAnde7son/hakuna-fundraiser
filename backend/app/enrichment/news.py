@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """News and web signal enrichment.
 
 Primary source: Google News RSS (free, no API key required).
@@ -8,9 +6,9 @@ Optional overlays: Exa AI, Tavily (if API keys are configured).
 All three providers share a common result shape so downstream AI enrichment
 doesn't care which one produced a signal.
 """
+from __future__ import annotations
 import asyncio
 import logging
-from urllib.parse import quote_plus
 
 import feedparser
 import httpx

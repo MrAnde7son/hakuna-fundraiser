@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 """FastAPI application entry point."""
+from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 

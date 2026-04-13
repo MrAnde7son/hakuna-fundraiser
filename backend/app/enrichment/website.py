@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 """Investor website scraping enrichment.
 
 Fetches the investor's website and extracts portfolio companies,
 investment thesis, team members, and focus areas from HTML content.
 """
+from __future__ import annotations
 import logging
 import re
 from urllib.parse import urljoin, urlparse

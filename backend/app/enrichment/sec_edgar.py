@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """SEC EDGAR enrichment for US funds.
 
 Pulls Form D filings to get actual fund size (totalOfferingAmount), vintage
@@ -9,8 +7,8 @@ adviser-info service for Form ADV AUM when the fund is a registered adviser.
 All sources are free. Respects SEC's fair-use policy (descriptive User-Agent,
 10 req/s max — enforced via tenacity backoff on 429s).
 """
+from __future__ import annotations
 import logging
-import re
 from xml.etree import ElementTree as ET
 
 import httpx

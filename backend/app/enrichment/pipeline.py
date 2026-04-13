@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Full enrichment pipeline orchestrator.
 
 Runs all enrichment sources for an investor and persists results.
@@ -13,6 +11,7 @@ Design:
 Every source is optional: when an API key is missing, its coroutine returns a
 "skipped" marker and the pipeline continues. Only AI enrichment requires a key.
 """
+from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timezone

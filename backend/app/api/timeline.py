@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models.investment_event import InvestmentEvent
 from app.models.investor import Investor
-from app.api.schemas import TimelineEntry, TimelineResponse, InvestmentEventOut
+from app.api.schemas import TimelineEntry, TimelineResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/timeline", tags=["timeline"])

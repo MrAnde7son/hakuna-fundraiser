@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 """Vertex AI enrichment layer.
 
 Runs portfolio conflict detection and generates investment intelligence
 using Google Vertex AI (Gemini) as the reasoning engine.
 """
+from __future__ import annotations
 import json
 import logging
 from google.api_core import exceptions as gcp_exceptions

@@ -5,7 +5,7 @@ import logging
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
-from sqlalchemy import select, func, case, cast, desc, literal_column
+from sqlalchemy import select, func, cast, literal_column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload

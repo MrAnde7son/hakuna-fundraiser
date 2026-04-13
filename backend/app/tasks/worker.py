@@ -1,15 +1,12 @@
-from __future__ import annotations
-
 """Celery worker configuration and task definitions."""
+from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import timedelta
 
 from celery import Celery
 from celery.schedules import crontab
-from sqlalchemy import create_engine, select
-from sqlalchemy.orm import Session
+from sqlalchemy import select
 
 logger = logging.getLogger(__name__)
 
