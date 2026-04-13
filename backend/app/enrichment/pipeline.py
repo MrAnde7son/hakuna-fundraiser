@@ -25,7 +25,7 @@ from app.models.partner import Partner
 from app.models.portfolio_company import PortfolioCompany, ConflictType
 from app.models.enrichment_job import EnrichmentJob, JobType, JobStatus
 from app.models.investment_event import InvestmentEvent, EventSource
-from app.enrichment import crunchbase, linkedin, sec_edgar, news, ai_enrichment
+from app.enrichment import crunchbase, sec_edgar, news, ai_enrichment
 from app.enrichment.website import scrape_investor_website
 from app.enrichment.press_releases import scrape_press_releases
 from app.services.slack import notify_failure
@@ -312,37 +312,12 @@ async def run_pipeline(session: AsyncSession, investor_id: int) -> None:
     # ------------------------------------------------------------------
     # Phase 2 — LinkedIn (depends on partner rows from phase 1)
     # ------------------------------------------------------------------
+    # Proxycurl was sunset (HTTP 410 on every call). The replacement (NinjaPear)
+    # has a different schema and no URL-based profile fetch, so migration is
+    # deferred — skip this phase entirely until a replacement is wired up.
     linkedin_job = await _create_job(session, investor_id, JobType.linkedin)
-    try:
-        if not get_settings().proxycurl_api_key:
-            investor.linkedin_status = "skipped"
-            await _complete_job(session, linkedin_job)
-        else:
-            partners_result = await session.execute(
-                select(Partner).where(Partner.investor_id == investor_id)
-            )
-            db_partners = list(partners_result.scalars().all())
-
-            if db_partners:
-                partner_dicts = [
-                    {"name": p.name, "title": p.title, "linkedin_url": p.linkedin_url}
-                    for p in db_partners
-                ]
-                enriched = await linkedin.enrich_partners(partner_dicts, investor.name)
-                for i, ep in enumerate(enriched):
-                    if i < len(db_partners):
-                        db_partners[i].linkedin_url = ep.get("linkedin_url")
-                        db_partners[i].linkedin_raw = ep.get("linkedin_raw")
-                        db_partners[i].network_degree = ep.get("network_degree")
-                investor.linkedin_status = "done"
-                sources_succeeded.append("linkedin")
-            else:
-                investor.linkedin_status = "skipped"
-            await _complete_job(session, linkedin_job)
-    except Exception as e:
-        investor.linkedin_status = "failed"
-        await _complete_job(session, linkedin_job, str(e))
-        logger.warning("LinkedIn enrichment failed for %s: %s", investor.name, e)
+    investor.linkedin_status = "skipped"
+    await _complete_job(session, linkedin_job, "proxycurl_sunset")
 
     # ------------------------------------------------------------------
     # Phase 3 — AI enrichment (needs portfolio + news + partners)
