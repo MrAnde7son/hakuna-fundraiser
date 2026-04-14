@@ -11,6 +11,10 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from vertexai.generative_models import GenerativeModel, GenerationConfig
 
 from app.config import get_settings
+from app.enrichment.cyber_domains import (
+    CYBER_DOMAIN_KEYS,
+    render_domains_for_prompt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +69,13 @@ USER_PROMPT_TEMPLATE = """Analyze the following investor for Hakuna's fundraise.
 **Partners:**
 {partners_list}
 
+**Cybersecurity domain catalog (for space_coverage mapping):**
+For every domain key below, set the value to `true` if THIS fund has at
+least one portfolio bet in that domain (current or prior, any stage), else
+`false`. Be honest — most funds will have many `false` entries. Include
+EVERY key listed; do not omit any. Use the exact snake_case keys.
+{domain_catalog}
+
 Produce a JSON response with EXACTLY this structure (no markdown, no code fences, just valid JSON):
 {{
   "vm_em_portfolio_map": {{
@@ -75,13 +86,7 @@ Produce a JSON response with EXACTLY this structure (no markdown, no code fences
     "clear":       ["Company — one-line reason"]
   }},
   "space_coverage": {{
-    "scanning":           true or false,
-    "prioritization":     true or false,
-    "remediation":        true or false,
-    "asm_easm":           true or false,
-    "caasm":              true or false,
-    "patch_management":   true or false,
-    "posture_management": true or false
+{coverage_keys_block}
   }},
   "thesis_inference": "What does this fund's portfolio suggest they believe about how VM/EM evolves?",
   "whitespace_signal": "Based on their portfolio gaps, which of the three Hakuna directions would least conflict and most interest them?",
@@ -150,6 +155,10 @@ async def run_ai_enrichment(
         for p in partners
     ) or "No partner data available."
 
+    coverage_keys_block = ",\n".join(
+        f'    "{key}": true or false' for key in CYBER_DOMAIN_KEYS
+    )
+
     user_prompt = USER_PROMPT_TEMPLATE.format(
         investor_name=investor_name,
         portfolio_list=portfolio_list,
@@ -158,6 +167,8 @@ async def run_ai_enrichment(
         stage_focus=stage_focus or "Unknown",
         geo_focus=geo_focus or "Unknown",
         partners_list=partners_list,
+        domain_catalog=render_domains_for_prompt(),
+        coverage_keys_block=coverage_keys_block,
     )
 
     model = _get_model()

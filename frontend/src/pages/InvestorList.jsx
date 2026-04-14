@@ -5,6 +5,7 @@ import { fetchInvestors, enrichAll } from '../api/investors'
 import StatusBadge from '../components/StatusBadge'
 import AddInvestorModal from '../components/AddInvestorModal'
 import useSearchParamsState from '../hooks/useSearchParamsState'
+import { CYBER_DOMAIN_KEYS } from '../lib/cyberDomains'
 
 const FILTER_DEFAULTS = {
   search: '',
@@ -92,8 +93,8 @@ export default function InvestorList() {
 
   const getCoverageSummary = (inv) => {
     const coverage = inv.ai_enrichment?.space_coverage || {}
-    const active = Object.values(coverage).filter(Boolean).length
-    return `${active}/7`
+    const active = CYBER_DOMAIN_KEYS.filter((k) => coverage[k]).length
+    return `${active}/${CYBER_DOMAIN_KEYS.length}`
   }
 
   // lightweight stats derived from current page (for hero strip)
@@ -386,21 +387,13 @@ function FilterSelect({ value, onChange, label, options }) {
 }
 
 function CoverageMini({ value }) {
-  const KEYS = ['scanning', 'prioritization', 'remediation', 'asm_easm', 'caasm', 'patch_management', 'posture_management']
   const v = value || {}
-  const active = KEYS.filter((k) => v[k]).length
+  const active = CYBER_DOMAIN_KEYS.filter((k) => v[k]).length
   return (
     <div className="inline-flex items-center gap-2">
-      <div className="flex gap-0.5">
-        {KEYS.map((k) => (
-          <span
-            key={k}
-            className={`w-1.5 h-3.5 rounded-sm ${v[k] ? 'bg-hakuna-500' : 'bg-ink-200'}`}
-            title={k}
-          />
-        ))}
-      </div>
-      <span className="text-[11px] text-ink-500 tabular-nums">{active}/{KEYS.length}</span>
+      <span className="text-[11px] text-ink-500 tabular-nums">
+        {active}/{CYBER_DOMAIN_KEYS.length}
+      </span>
     </div>
   )
 }
