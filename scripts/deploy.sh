@@ -54,6 +54,7 @@ echo "==> Syncing worker VM metadata to new image tag (terraform)"
 # Run a targeted apply so the VM is recreated with the new image baked in.
 # (Cloud Run has ignore_changes on its image field, so this won't fight the
 # `gcloud run deploy` above.)
+terraform -chdir=terraform init -input=false -upgrade=false
 terraform -chdir=terraform apply -auto-approve \
   -var "api_image=${API_IMAGE}" \
   -var "frontend_image=${FRONTEND_IMAGE}" \

@@ -38,6 +38,11 @@ jobs:
         with:
           project_id: ${{ vars.GCP_PROJECT_ID || 'hakuna-prod-2026' }}
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
       - name: Deploy
         env:
           PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'hakuna-prod-2026' }}
