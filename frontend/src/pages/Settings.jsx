@@ -50,23 +50,23 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
+    <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-bold text-hakuna-900">Settings</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-hakuna-900">Settings</h1>
         <p className="text-sm text-hakuna-500 mt-1">
           API keys and model configuration. Values are persisted to disk and override the
           environment defaults. Leave blank and save to clear an override.
         </p>
       </header>
 
-      <form onSubmit={onSave} className="space-y-5 bg-white border border-hakuna-200 rounded-lg p-6">
+      <form onSubmit={onSave} className="space-y-5 bg-white border border-hakuna-200 rounded-lg p-4 sm:p-6">
         {fields.map((field) => {
           const draft = drafts[field.key]
           const editing = draft !== undefined
           const showReveal = reveal[field.key]
           return (
-            <div key={field.key} className="grid grid-cols-3 gap-4 items-start">
-              <label htmlFor={field.key} className="text-sm font-medium text-hakuna-800 pt-2">
+            <div key={field.key} className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 sm:items-start">
+              <label htmlFor={field.key} className="text-sm font-medium text-hakuna-800 sm:pt-2">
                 {field.label}
                 {field.overridden && (
                   <span className="ml-2 text-[10px] uppercase tracking-wide text-blue-600">
@@ -74,8 +74,8 @@ export default function Settings() {
                   </span>
                 )}
               </label>
-              <div className="col-span-2 space-y-1">
-                <div className="flex gap-2">
+              <div className="sm:col-span-2 space-y-1">
+                <div className="flex gap-2 flex-wrap sm:flex-nowrap">
                   <input
                     id={field.key}
                     type={field.secret && !showReveal ? 'password' : 'text'}
@@ -113,7 +113,7 @@ export default function Settings() {
           )
         })}
 
-        <div className="flex items-center gap-3 pt-2 border-t border-hakuna-200">
+        <div className="flex items-center gap-3 pt-2 border-t border-hakuna-200 flex-wrap">
           <button
             type="submit"
             disabled={!dirty || mutation.isPending}

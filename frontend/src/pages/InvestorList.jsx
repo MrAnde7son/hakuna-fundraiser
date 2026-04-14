@@ -103,26 +103,26 @@ export default function InvestorList() {
 
   return (
     <div className="page-shell">
-      <div className="page-content p-8 max-w-[1400px] mx-auto">
+      <div className="page-content p-4 sm:p-6 md:p-8 max-w-[1400px] mx-auto">
         {/* Hero */}
-        <div className="flex items-start justify-between mb-8 gap-6">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-6 md:mb-8 gap-4 md:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/70 backdrop-blur ring-1 ring-ink-200 text-[11px] font-medium text-ink-600 mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"/>
               Live enrichment · refresh 10s
             </div>
-            <h1 className="text-[34px] leading-tight font-display text-ink-900">
+            <h1 className="text-2xl sm:text-3xl md:text-[34px] leading-tight font-display text-ink-900">
               Investor <span className="italic text-hakuna-700">intelligence</span>
             </h1>
             <p className="text-sm text-ink-500 mt-1.5 max-w-xl">
               Track funds, surface thesis signals, and see portfolio conflicts before they cost you a meeting.
             </p>
           </div>
-          <div className="flex gap-2 shrink-0">
+          <div className="flex gap-2 shrink-0 flex-wrap">
             <button
               onClick={() => enrichAllMut.mutate()}
               disabled={enrichAllMut.isPending}
-              className="btn-secondary"
+              className="btn-secondary flex-1 md:flex-initial justify-center"
             >
               <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/>
@@ -130,7 +130,7 @@ export default function InvestorList() {
               </svg>
               {enrichAllMut.isPending ? 'Queuing…' : 'Re-enrich All'}
             </button>
-            <button onClick={() => setShowAdd(true)} className="btn-primary">
+            <button onClick={() => setShowAdd(true)} className="btn-primary flex-1 md:flex-initial justify-center">
               <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" className="w-4 h-4">
                 <path d="M12 5v14M5 12h14"/>
               </svg>
@@ -140,7 +140,7 @@ export default function InvestorList() {
         </div>
 
         {/* Stat strip */}
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-6">
           <StatTile label="Total tracked" value={total} accent="hakuna" />
           <StatTile label="Enriched" value={doneCount} accent="emerald" sub="on this page" />
           <StatTile label="In progress" value={runningCount} accent="savanna" sub="enriching now" pulse={runningCount > 0} />
@@ -149,7 +149,7 @@ export default function InvestorList() {
 
         {/* Toolbar */}
         <div className="card p-3 mb-4 flex items-center gap-2 flex-wrap">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-400">
               <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
             </svg>
@@ -158,7 +158,7 @@ export default function InvestorList() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search name, website, stage…"
-              className="pl-8 pr-8 py-1.5 text-sm rounded-lg border bg-white border-ink-200 text-ink-800 placeholder-ink-400 focus:outline-none focus:border-hakuna-400 focus:ring-1 focus:ring-hakuna-300 w-64"
+              className="pl-8 pr-8 py-1.5 text-sm rounded-lg border bg-white border-ink-200 text-ink-800 placeholder-ink-400 focus:outline-none focus:border-hakuna-400 focus:ring-1 focus:ring-hakuna-300 w-full sm:w-64"
             />
             {searchInput && (
               <button
@@ -204,7 +204,7 @@ export default function InvestorList() {
               ['posture_management', 'No posture mgmt bet'],
             ]}
           />
-          <div className="ml-auto text-xs text-ink-500 pr-2">
+          <div className="w-full sm:w-auto sm:ml-auto text-xs text-ink-500 sm:pr-2">
             {total.toLocaleString()} investors
           </div>
         </div>
@@ -214,7 +214,8 @@ export default function InvestorList() {
           <div className="card p-16 text-center text-ink-400 text-sm">Loading investors…</div>
         ) : (
           <div className="card overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[720px]">
               <thead className="bg-ink-50/70 border-b border-ink-100">
                 <tr>
                   {SORT_COLUMNS.map((col) => {
@@ -283,6 +284,7 @@ export default function InvestorList() {
                 })}
               </tbody>
             </table>
+            </div>
             {investors.length === 0 && (
               <div className="text-center py-16 text-ink-400 text-sm">
                 {total === 0
@@ -294,11 +296,11 @@ export default function InvestorList() {
         )}
 
         {!isLoading && total > 0 && (
-          <div className="flex items-center justify-between mt-4 px-1 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-1 text-sm gap-3">
             <span className="text-ink-500">
               Showing <span className="font-medium text-ink-700">{rangeStart}–{rangeEnd}</span> of <span className="font-medium text-ink-700">{total}</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setFilters({ page: page - 1 })}
                 disabled={page <= 1}
@@ -341,7 +343,7 @@ function StatTile({ label, value, sub, accent = 'hakuna', pulse }) {
     red:     'from-red-500/10 to-transparent text-red-700',
   }
   return (
-    <div className={`card card-hover relative overflow-hidden p-4`}>
+    <div className={`card card-hover relative overflow-hidden p-3 sm:p-4`}>
       <div className={`absolute inset-0 bg-gradient-to-br ${ACCENTS[accent]} pointer-events-none`}/>
       <div className="relative">
         <div className="text-[11px] font-medium uppercase tracking-wider text-ink-500">{label}</div>

@@ -143,15 +143,15 @@ export default function DomainConflicts() {
   })
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Domain Conflicts</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Domain Conflicts</h1>
           <p className="text-sm text-gray-500 mt-1">
             Investors vs. your target domains — see where the path is clearest
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setShowAddForm(true)}
             className="px-4 py-2 text-sm bg-hakuna-600 text-white rounded-lg hover:bg-hakuna-700 transition-colors"
@@ -188,8 +188,12 @@ export default function DomainConflicts() {
 
       {/* Domain summary cards */}
       {summary.length > 0 && (
-        <div className={clsx('grid gap-4 mb-6', summary.length <= 4 ? `grid-cols-${summary.length}` : 'grid-cols-3')}
-             style={{ gridTemplateColumns: `repeat(${Math.min(summary.length, 4)}, minmax(0, 1fr))` }}>
+        <div
+          className="grid gap-3 sm:gap-4 mb-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          style={{
+            gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, 240px), 1fr))`,
+          }}
+        >
           {summary.map((d) => (
             <div key={d.id} className="bg-white rounded-xl border p-4 group relative">
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -212,7 +216,7 @@ export default function DomainConflicts() {
               </div>
               <h3 className="text-sm font-semibold mb-1">{d.name}</h3>
               {d.description && <p className="text-xs text-gray-400 mb-2">{d.description}</p>}
-              <div className="flex gap-2">
+              <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
                 <MiniStat label="Clear" count={d.counts.clear} color="text-green-600 bg-green-50" />
                 <MiniStat label="Watching" count={d.counts.watching} color="text-blue-600 bg-blue-50" />
                 <MiniStat label="Adjacent" count={d.counts.adjacent} color="text-yellow-600 bg-yellow-50" />
@@ -243,13 +247,13 @@ export default function DomainConflicts() {
       ) : (
         <>
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <input
               type="search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search investor…"
-              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-hakuna-300 w-64"
+              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-hakuna-300 w-full sm:w-64"
             />
             {searchInput && (
               <button
@@ -262,12 +266,13 @@ export default function DomainConflicts() {
               </button>
             )}
           </div>
-          <div className="ml-auto text-xs text-gray-500">
+          <div className="w-full sm:w-auto sm:ml-auto text-xs text-gray-500">
             {total.toLocaleString()} {total === 1 ? 'investor' : 'investors'}
           </div>
         </div>
         <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th
@@ -342,6 +347,7 @@ export default function DomainConflicts() {
               ))}
             </tbody>
           </table>
+          </div>
           {pagedRows.length === 0 && (
             <div className="text-center py-12 text-gray-400 text-sm">
               No investors match the current search.
@@ -349,11 +355,11 @@ export default function DomainConflicts() {
           )}
         </div>
         {total > 0 && (
-          <div className="flex items-center justify-between mt-4 px-1 text-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-1 text-sm gap-3">
             <span className="text-gray-500">
               Showing <span className="font-medium text-gray-700">{rangeStart}–{rangeEnd}</span> of <span className="font-medium text-gray-700">{total}</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={safePage <= 1}
@@ -408,10 +414,10 @@ function DomainForm({ initialData, onSubmit, onCancel, isLoading }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg mx-4"
+        className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-5 sm:p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto"
       >
         <h2 className="text-lg font-semibold mb-4">{isEdit ? 'Edit Domain' : 'Add Domain'}</h2>
 

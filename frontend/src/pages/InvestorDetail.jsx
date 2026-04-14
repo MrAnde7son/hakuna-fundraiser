@@ -69,7 +69,7 @@ export default function InvestorDetail() {
 
   return (
     <div className="page-shell">
-      <div className="page-content p-8 max-w-[1400px] mx-auto">
+      <div className="page-content p-4 sm:p-6 md:p-8 max-w-[1400px] mx-auto">
         {/* Back */}
         <button
           onClick={() => navigate('/investors')}
@@ -82,15 +82,15 @@ export default function InvestorDetail() {
         </button>
 
         {/* Header */}
-        <div className="card p-6 mb-6 relative overflow-hidden">
+        <div className="card p-4 sm:p-6 mb-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-hakuna-radial pointer-events-none"/>
-          <div className="relative flex items-start gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-hakuna-500 to-hakuna-800 text-white grid place-items-center text-lg font-semibold shadow-lift ring-1 ring-hakuna-700/30 shrink-0">
+          <div className="relative flex items-start gap-4 sm:gap-5 flex-wrap">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-hakuna-500 to-hakuna-800 text-white grid place-items-center text-base sm:text-lg font-semibold shadow-lift ring-1 ring-hakuna-700/30 shrink-0">
               {initials}
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-[28px] leading-tight font-display text-ink-900 truncate">{investor.name}</h1>
-              <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <div className="flex-1 min-w-[180px]">
+              <h1 className="text-xl sm:text-2xl md:text-[28px] leading-tight font-display text-ink-900 truncate">{investor.name}</h1>
+              <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
                 <StatusBadge status={investor.enrichment_status} />
                 {investor.type && (
                   <span className="chip bg-ink-100 text-ink-700 uppercase tracking-wide text-[10px]">{investor.type}</span>
@@ -108,7 +108,7 @@ export default function InvestorDetail() {
             <button
               onClick={() => enrichMut.mutate()}
               disabled={enrichMut.isPending}
-              className="btn-primary shrink-0"
+              className="btn-primary shrink-0 justify-center w-full sm:w-auto"
             >
               <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.8" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
                 <path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5"/>
@@ -147,7 +147,7 @@ export default function InvestorDetail() {
         </div>
 
         {/* Tab content */}
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
         {tab === 'Overview' && <OverviewTab investor={investor} ai={ai} />}
         {tab === 'Partners' && <PartnersTab partners={partners} />}
         {tab === 'Portfolio' && <PortfolioTab portfolio={portfolio} />}
@@ -173,7 +173,7 @@ function OverviewTab({ investor, ai }) {
   const fmtUsd = (n) => (n ? `$${(n / 1e6).toFixed(0)}M` : null)
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <Field label="Fund Size (Form D)" value={fmtUsd(investor.fund_size_usd) || 'Unknown'} />
         <Field label="Form ADV AUM" value={fmtUsd(sec.adv_aum_usd) || '—'} />
         <Field label="Industry Group" value={sec.industry_group || '—'} />
@@ -494,8 +494,8 @@ function RawDataTab({ investor, jobs }) {
             <h3 className="text-sm font-semibold">SEC Form D Filings</h3>
             <span className="text-xs text-gray-500">{filings.length} filing{filings.length === 1 ? '' : 's'}</span>
           </div>
-          <div className="border rounded-lg overflow-hidden bg-white">
-            <table className="w-full text-xs">
+          <div className="border rounded-lg overflow-x-auto bg-white">
+            <table className="w-full text-xs min-w-[600px]">
               <thead className="bg-gray-50 text-gray-500">
                 <tr>
                   <th className="text-left px-3 py-2">Filed</th>
