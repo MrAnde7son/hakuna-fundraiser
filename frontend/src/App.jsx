@@ -1,57 +1,141 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Users, Target, LineChart, Settings as SettingsIcon } from 'lucide-react'
+import { NavBar, MobileTopBar, LogoSymbol, LogoWordmark, useBreakpoint } from '@hakunahq/ui'
 import InvestorList from './pages/InvestorList'
 import DomainConflicts from './pages/DomainConflicts'
 import InvestorDetail from './pages/InvestorDetail'
 import Timeline from './pages/Timeline'
 import Settings from './pages/Settings'
 
-function MobileHeader({ onOpenMenu }) {
+const NAV_ITEMS = [
+  { key: 'investors', label: 'Investors',       icon: <Users size={18} />,        path: '/investors' },
+  { key: 'strategy',  label: 'Domain Conflicts', icon: <Target size={18} />,       path: '/strategy' },
+  { key: 'timeline',  label: 'Timeline',         icon: <LineChart size={18} />,    path: '/timeline' },
+  { key: 'settings',  label: 'Settings',         icon: <SettingsIcon size={18} />, path: '/settings' },
+]
+
+function activeKeyFromPath(pathname) {
+  if (pathname.startsWith('/investors')) return 'investors'
+  if (pathname.startsWith('/strategy')) return 'strategy'
+  if (pathname.startsWith('/timeline')) return 'timeline'
+  if (pathname.startsWith('/settings')) return 'settings'
+  return ''
+}
+
+function MobileNavDrawer({ open, onClose, activeKey, onNavigate }) {
+  useEffect(() => {
+    if (!open) return
+    document.body.style.overflow = 'hidden'
+    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handler)
+    return () => {
+      document.body.style.overflow = ''
+      document.removeEventListener('keydown', handler)
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+
   return (
-    <header className="md:hidden sticky top-0 z-20 flex items-center justify-between px-4 h-14 bg-gradient-to-r from-hakuna-900 to-hakuna-950 text-white border-b border-white/5">
-      <button
-        onClick={onOpenMenu}
-        className="p-2 -ml-2 rounded-md hover:bg-white/10 transition-colors"
-        aria-label="Open menu"
+    <>
+      <div
+        onClick={onClose}
+        style={{ position: 'fixed', inset: 0, zIndex: 199, background: 'rgba(0,0,0,0.4)' }}
+      />
+      <div
+        style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0, width: 280, zIndex: 200,
+          background: 'linear-gradient(to bottom, var(--hk-primary-900), var(--hk-primary-950), var(--hk-neutral-950))',
+          color: '#fff',
+          display: 'flex', flexDirection: 'column',
+        }}
       >
-        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" stroke="currentColor" strokeLinecap="round" className="w-5 h-5">
-          <path d="M4 6h16M4 12h16M4 18h16"/>
-        </svg>
-      </button>
-      <div className="flex items-center gap-2">
-        <svg viewBox="0 0 32 32" className="w-6 h-6">
-          <defs>
-            <linearGradient id="mobile-logo-g" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#36a9ff"/>
-              <stop offset="100%" stopColor="#004b94"/>
-            </linearGradient>
-          </defs>
-          <rect width="32" height="32" rx="7" fill="url(#mobile-logo-g)"/>
-          <path d="M10 9 L10 23 M10 16 L22 16 M22 9 L22 23" stroke="white" strokeWidth="2.6" strokeLinecap="round" fill="none"/>
-        </svg>
-        <span className="text-sm font-semibold tracking-tight">Hakuna</span>
+        <div style={{
+          padding: '16px 16px 12px',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <LogoWordmark color="#fff" height={22} />
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            style={{
+              background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)',
+              fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+        <nav style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          {NAV_ITEMS.map(item => {
+            const active = activeKey === item.key
+            return (
+              <button
+                key={item.key}
+                onClick={() => onNavigate(item)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 'var(--hk-radius-sm)',
+                  border: 'none', cursor: 'pointer',
+                  background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
+                  color: active ? '#fff' : 'rgba(255,255,255,0.75)',
+                  fontSize: 14, fontWeight: active ? 600 : 500, textAlign: 'left',
+                }}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
+        </nav>
       </div>
-      <div className="w-9" />
-    </header>
+    </>
   )
 }
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
   const location = useLocation()
+  const bp = useBreakpoint()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const activeKey = activeKeyFromPath(location.pathname)
 
-  // Close menu on route change
-  useEffect(() => {
+  useEffect(() => { setMenuOpen(false) }, [location.pathname])
+
+  const handleNavigate = (item) => {
     setMenuOpen(false)
-  }, [location.pathname])
+    navigate(item.path)
+  }
 
   return (
-    <div className="flex md:h-screen md:overflow-hidden">
-      <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="flex-1 flex flex-col min-w-0 md:h-screen md:overflow-hidden">
-        <MobileHeader onOpenMenu={() => setMenuOpen(true)} />
-        <main className="flex-1 md:overflow-auto">
+    <>
+      {bp.md && (
+        <NavBar
+          variant="dark"
+          logo={<LogoWordmark color="#fff" height={22} />}
+          logoCollapsed={<LogoSymbol color="#fff" size={22} />}
+          subtitle="Investor Intel"
+          items={NAV_ITEMS}
+          activeKey={activeKey}
+          onNavigate={handleNavigate}
+        />
+      )}
+
+      <div style={{
+        marginLeft: bp.md ? 220 : 0,
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+        {!bp.md && (
+          <MobileTopBar
+            logo={<LogoWordmark height={20} />}
+            onMenuClick={() => setMenuOpen(true)}
+          />
+        )}
+        <main style={{ flex: 1 }}>
           <Routes>
             <Route path="/" element={<Navigate to="/investors" replace />} />
             <Route path="/investors" element={<InvestorList />} />
@@ -63,6 +147,13 @@ export default function App() {
           </Routes>
         </main>
       </div>
-    </div>
+
+      <MobileNavDrawer
+        open={menuOpen && !bp.md}
+        onClose={() => setMenuOpen(false)}
+        activeKey={activeKey}
+        onNavigate={handleNavigate}
+      />
+    </>
   )
 }

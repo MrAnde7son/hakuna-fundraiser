@@ -1,4 +1,3 @@
-import clsx from 'clsx'
 import { CYBER_DOMAINS, CYBER_DOMAIN_GROUPS } from '../lib/cyberDomains'
 
 export default function SpaceCoverageGrid({ coverage }) {
@@ -7,7 +6,7 @@ export default function SpaceCoverageGrid({ coverage }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between text-xs text-ink-500">
+      <div className="flex items-center justify-between text-xs" style={{ color: 'var(--hk-text-secondary)' }}>
         <span>
           Coverage across the cybersecurity landscape — red = the fund has a portfolio bet,
           green = open whitespace.
@@ -22,25 +21,32 @@ export default function SpaceCoverageGrid({ coverage }) {
         return (
           <div key={group}>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-ink-500">
+              <h4 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--hk-text-secondary)' }}>
                 {group}
               </h4>
-              <span className="text-[10px] text-ink-400 tabular-nums">
+              <span className="text-[10px] tabular-nums" style={{ color: 'var(--hk-text-muted)' }}>
                 {groupActive}/{domains.length}
               </span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {domains.map((d) => {
                 const active = !!cov[d.key]
+                const style = active
+                  ? {
+                      background: 'var(--hk-danger-subtle)',
+                      borderColor: 'var(--hk-sev-critical-border)',
+                      color: 'var(--hk-danger-on-subtle)',
+                    }
+                  : {
+                      background: 'var(--hk-success-subtle)',
+                      borderColor: 'var(--hk-sev-low-border)',
+                      color: 'var(--hk-success-on-subtle)',
+                    }
                 return (
                   <div
                     key={d.key}
-                    className={clsx(
-                      'rounded-lg px-3 py-2.5 text-center text-xs font-medium border transition-colors',
-                      active
-                        ? 'bg-red-50 border-red-200 text-red-700'
-                        : 'bg-green-50 border-green-200 text-green-700'
-                    )}
+                    className="rounded-lg px-3 py-2.5 text-center text-xs font-medium border transition-colors"
+                    style={style}
                   >
                     <div className="text-lg mb-1">{active ? '🔴' : '🟢'}</div>
                     {d.label}

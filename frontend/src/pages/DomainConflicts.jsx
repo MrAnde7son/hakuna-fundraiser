@@ -4,6 +4,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { fetchDomainConflicts } from '../api/investors'
 import { fetchDomains, createDomain, updateDomain, deleteDomain } from '../api/focusAreas'
 import clsx from 'clsx'
+import {
+  Button,
+  Input,
+  Select,
+  Card,
+  Modal,
+  Table,
+  EmptyState,
+  Pill,
+  Spinner,
+} from '@hakunahq/ui'
+import { Pencil, X, Search, Plus, Download, FolderOpen } from 'lucide-react'
 
 const CONFLICT_COLORS = {
   blocking: 'bg-red-100 text-red-800',
@@ -129,8 +141,52 @@ export default function DomainConflicts() {
     }
   }
 
-  const sortArrow = (key) =>
-    sortKey === key ? (sortDir === 'asc' ? '▲' : '▼') : '↕'
+  const tableColumns = useMemo(() => {
+    const cols = [
+      {
+        key: 'investor',
+        label: 'Investor',
+        sortable: true,
+        render: (_v, row) => <span className="font-medium">{row.investor_name}</span>,
+      },
+      ...domains.map((d) => ({
+        key: `domain:${d.id}`,
+        label: d.name,
+        sortable: true,
+        align: 'center',
+        render: (_v, row) => {
+          const val = row.scores[String(d.id)] || 'clear'
+          return (
+            <span
+              className={clsx(
+                'inline-block px-3 py-1 rounded-full text-xs font-medium',
+                CONFLICT_COLORS[val] || CONFLICT_COLORS.clear
+              )}
+            >
+              {val}
+            </span>
+          )
+        },
+      })),
+      {
+        key: 'worst',
+        label: 'Worst',
+        sortable: true,
+        align: 'center',
+        render: (_v, row) => (
+          <span
+            className={clsx(
+              'inline-block px-3 py-1 rounded-full text-xs font-medium',
+              CONFLICT_COLORS[row.worst_conflict] || CONFLICT_COLORS.clear
+            )}
+          >
+            {row.worst_conflict}
+          </span>
+        ),
+      },
+    ]
+    return cols
+  }, [domains])
 
   // Summary counts per domain
   const summary = domains.map((d) => {
@@ -152,18 +208,22 @@ export default function DomainConflicts() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
+          <Button
+            variant="primary"
+            size="sm"
             onClick={() => setShowAddForm(true)}
-            className="px-4 py-2 text-sm bg-hakuna-600 text-white rounded-lg hover:bg-hakuna-700 transition-colors"
           >
-            + Add Domain
-          </button>
-          <button
+            <Plus size={16} />
+            Add Domain
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={exportCSV}
-            className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
           >
+            <Download size={16} />
             Export CSV
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -195,23 +255,23 @@ export default function DomainConflicts() {
           }}
         >
           {summary.map((d) => (
-            <div key={d.id} className="bg-white rounded-xl border p-4 group relative">
+            <Card key={d.id} className="p-4 group relative">
               <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => setEditingDomain(d)}
-                  className="text-gray-400 hover:text-hakuna-600 text-sm"
+                  className="text-gray-400 hover:text-hakuna-600"
                   title="Edit domain"
                 >
-                  &#9998;
+                  <Pencil size={14} />
                 </button>
                 <button
                   onClick={() => {
                     if (confirm(`Remove "${d.name}" domain?`)) removeMutation.mutate(d.id)
                   }}
-                  className="text-gray-400 hover:text-red-500 text-sm"
+                  className="text-gray-400 hover:text-red-500"
                   title="Remove domain"
                 >
-                  ✕
+                  <X size={14} />
                 </button>
               </div>
               <h3 className="text-sm font-semibold mb-1">{d.name}</h3>
@@ -224,166 +284,85 @@ export default function DomainConflicts() {
               </div>
               <div className="mt-2 flex flex-wrap gap-1">
                 {(d.keywords || []).map((kw) => (
-                  <span key={kw} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
-                    {kw}
-                  </span>
+                  <Pill key={kw} label={kw} color="gray" />
                 ))}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
 
       {domains.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          No domains defined. Add one to get started.
-        </div>
+        <EmptyState
+          icon={FolderOpen}
+          title="No domains defined"
+          sub="Add one to get started."
+        />
       ) : isLoading ? (
-        <div className="text-center py-12 text-gray-400">Loading conflicts...</div>
-      ) : matrix.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          No enriched investors yet. Run enrichment first.
+        <div className="flex items-center justify-center py-12 text-gray-400 gap-2">
+          <Spinner /> Loading conflicts...
         </div>
+      ) : matrix.length === 0 ? (
+        <EmptyState
+          icon={FolderOpen}
+          title="No enriched investors yet"
+          sub="Run enrichment first."
+        />
       ) : (
         <>
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <div className="relative w-full sm:w-auto">
-            <input
+          <div className="relative w-full sm:w-auto sm:w-64">
+            <Input
               type="search"
               value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
+              onChange={(value) => setSearchInput(value)}
               placeholder="Search investor…"
-              className="pl-3 pr-8 py-1.5 text-sm rounded-lg border bg-white border-gray-200 focus:outline-none focus:ring-2 focus:ring-hakuna-300 w-full sm:w-64"
             />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={() => setSearchInput('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs"
-                aria-label="Clear search"
-              >
-                ✕
-              </button>
-            )}
           </div>
           <div className="w-full sm:w-auto sm:ml-auto text-xs text-gray-500">
             {total.toLocaleString()} {total === 1 ? 'investor' : 'investors'}
           </div>
         </div>
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th
-                  onClick={() => onSort('investor')}
-                  className="text-left px-4 py-3 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-800"
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    Investor
-                    <span className={`text-[9px] ${sortKey === 'investor' ? 'text-hakuna-600' : 'text-gray-300'}`}>{sortArrow('investor')}</span>
-                  </span>
-                </th>
-                {domains.map((d) => {
-                  const key = `domain:${d.id}`
-                  return (
-                    <th
-                      key={d.id}
-                      onClick={() => onSort(key)}
-                      className="text-center px-4 py-3 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-800"
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        {d.name}
-                        <span className={`text-[9px] ${sortKey === key ? 'text-hakuna-600' : 'text-gray-300'}`}>{sortArrow(key)}</span>
-                      </span>
-                    </th>
-                  )
-                })}
-                <th
-                  onClick={() => onSort('worst')}
-                  className="text-center px-4 py-3 font-medium text-gray-500 cursor-pointer select-none hover:text-gray-800"
-                >
-                  <span className="inline-flex items-center gap-1.5">
-                    Worst
-                    <span className={`text-[9px] ${sortKey === 'worst' ? 'text-hakuna-600' : 'text-gray-300'}`}>{sortArrow('worst')}</span>
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {pagedRows.map((row) => (
-                <tr
-                  key={row.investor_id}
-                  onClick={() => navigate(`/investors/${row.investor_id}`)}
-                  className="hover:bg-blue-50/50 cursor-pointer transition-colors"
-                >
-                  <td className="px-4 py-3 font-medium">{row.investor_name}</td>
-                  {domains.map((d) => {
-                    const val = row.scores[String(d.id)] || 'clear'
-                    return (
-                      <td key={d.id} className="px-4 py-3 text-center">
-                        <span
-                          className={clsx(
-                            'inline-block px-3 py-1 rounded-full text-xs font-medium',
-                            CONFLICT_COLORS[val] || CONFLICT_COLORS.clear
-                          )}
-                        >
-                          {val}
-                        </span>
-                      </td>
-                    )
-                  })}
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={clsx(
-                        'inline-block px-3 py-1 rounded-full text-xs font-medium',
-                        CONFLICT_COLORS[row.worst_conflict] || CONFLICT_COLORS.clear
-                      )}
-                    >
-                      {row.worst_conflict}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          </div>
-          {pagedRows.length === 0 && (
-            <div className="text-center py-12 text-gray-400 text-sm">
-              No investors match the current search.
-            </div>
-          )}
-        </div>
+        <Card className="overflow-hidden">
+          <Table
+            columns={tableColumns}
+            rows={pagedRows}
+            rowKey={(row) => row.investor_id}
+            onRowClick={(row) => navigate(`/investors/${row.investor_id}`)}
+            sortBy={sortKey}
+            sortOrder={sortDir}
+            onSort={onSort}
+            emptyMessage="No investors match the current search."
+          />
+        </Card>
         {total > 0 && (
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 px-1 text-sm gap-3">
             <span className="text-gray-500">
               Showing <span className="font-medium text-gray-700">{rangeStart}–{rangeEnd}</span> of <span className="font-medium text-gray-700">{total}</span>
             </span>
             <div className="flex items-center gap-2 flex-wrap">
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={safePage <= 1}
-                className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 Prev
-              </button>
+              </Button>
               <span className="text-gray-600 px-2">Page {safePage} / {totalPages}</span>
-              <button
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safePage >= totalPages}
-                className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
               >
                 Next
-              </button>
-              <select
+              </Button>
+              <Select
                 value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-                className="px-2 py-1.5 text-sm border rounded-lg bg-white"
-              >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>{n}/page</option>
-                ))}
-              </select>
+                onChange={(value) => setPageSize(Number(value))}
+                options={PAGE_SIZE_OPTIONS.map((n) => ({ value: n, label: `${n}/page` }))}
+              />
             </div>
           </div>
         )}
@@ -414,63 +393,59 @@ function DomainForm({ initialData, onSubmit, onCancel, isLoading }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 overflow-y-auto">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-t-xl sm:rounded-xl shadow-xl p-5 sm:p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto"
-      >
-        <h2 className="text-lg font-semibold mb-4">{isEdit ? 'Edit Domain' : 'Add Domain'}</h2>
-
-        <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-        <input
+    <Modal
+      open
+      onClose={onCancel}
+      title={isEdit ? 'Edit Domain' : 'Add Domain'}
+    >
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <Input
+          label="Name *"
           required
           value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-hakuna-500"
+          onChange={(value) => setName(value)}
           placeholder="e.g. API Security, Cloud Posture, Identity Governance"
         />
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <input
+        <Input
+          label="Description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-hakuna-500"
+          onChange={(value) => setDescription(value)}
           placeholder="Optional short description"
         />
 
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Keywords *
-        </label>
-        <p className="text-xs text-gray-400 mb-2">
-          Comma-separated terms to match against investor portfolios. These are matched against portfolio company names, categories, descriptions, and conflict maps.
-        </p>
-        <textarea
-          required
-          value={keywords}
-          onChange={(e) => setKeywords(e.target.value)}
-          rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-hakuna-500"
-          placeholder="e.g. api security, api gateway, api protection, runtime security"
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Keywords *
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            Comma-separated terms to match against investor portfolios. These are matched against portfolio company names, categories, descriptions, and conflict maps.
+          </p>
+          <textarea
+            required
+            value={keywords}
+            onChange={(e) => setKeywords(e.target.value)}
+            rows={3}
+            className="w-full border rounded-lg px-3 py-2 text-sm mb-1 focus:outline-none focus:ring-2 focus:ring-hakuna-500"
+            placeholder="e.g. api security, api gateway, api protection, runtime security"
+          />
+        </div>
 
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
-          >
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onCancel}>
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            disabled={isLoading || !name || !keywords.trim()}
-            className="px-4 py-2 text-sm bg-hakuna-600 text-white rounded-lg hover:bg-hakuna-700 disabled:opacity-50"
+            variant="primary"
+            disabled={!name || !keywords.trim()}
+            loading={isLoading}
           >
-            {isLoading ? (isEdit ? 'Saving...' : 'Adding...') : (isEdit ? 'Save' : 'Add')}
-          </button>
+            {isEdit ? 'Save' : 'Add'}
+          </Button>
         </div>
       </form>
-    </div>
+    </Modal>
   )
 }
 

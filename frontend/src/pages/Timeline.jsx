@@ -1,10 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { Button, Input, Select, Card, StatCard, Pill, Tabs, Table, EmptyState, Spinner } from '@hakunahq/ui'
+import { Clock, TrendingUp, ChevronDown, ChevronUp, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, ExternalLink } from 'lucide-react'
+import clsx from 'clsx'
 import { fetchTimeline, fetchTimelineDomains, fetchTimelineStats } from '../api/timeline'
 import { fetchInvestors } from '../api/investors'
 import useSearchParamsState from '../hooks/useSearchParamsState'
-import clsx from 'clsx'
 
 const DOMAIN_COLORS = {
   'vulnerability management': 'bg-red-100 text-red-800',
@@ -119,6 +121,10 @@ export default function Timeline() {
 
   const onSelectInvestor = (id) => navigate(`/investors/${id}`)
 
+  const yearsSpan = stats && Object.keys(stats.by_year || {}).length > 0
+    ? `${Math.min(...Object.keys(stats.by_year).map(Number))} - ${Math.max(...Object.keys(stats.by_year).map(Number))}`
+    : '---'
+
   return (
     <div className="p-4 sm:p-6">
       {/* Header */}
@@ -134,145 +140,109 @@ export default function Timeline() {
       {/* Stats cards */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <StatCard label="Total Events" value={stats.total_events} />
+          <StatCard label="Total Events" value={stats.total_events} icon={TrendingUp} />
           <StatCard label="Investors Tracked" value={stats.investors_with_events} />
           <StatCard label="Domains" value={Object.keys(stats.by_domain || {}).length} />
-          <StatCard label="Years Span" value={
-            Object.keys(stats.by_year || {}).length > 0
-              ? `${Math.min(...Object.keys(stats.by_year).map(Number))} - ${Math.max(...Object.keys(stats.by_year).map(Number))}`
-              : '---'
-          } />
+          <StatCard label="Years Span" value={yearsSpan} icon={Clock} />
         </div>
       )}
 
       {/* Filters bar */}
-      <div className="bg-white rounded-xl border p-3 sm:p-4 mb-6">
+      <Card className="p-3 sm:p-4 mb-6">
         <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           {/* View toggle */}
-          <div className="flex bg-gray-100 rounded-lg p-0.5">
-            <button
-              onClick={() => setParams({ view: 'timeline' })}
-              className={clsx(
-                'px-3 py-1.5 text-sm rounded-md transition-colors',
-                view === 'timeline' ? 'bg-white shadow font-medium' : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              Timeline
-            </button>
-            <button
-              onClick={() => setParams({ view: 'table' })}
-              className={clsx(
-                'px-3 py-1.5 text-sm rounded-md transition-colors',
-                view === 'table' ? 'bg-white shadow font-medium' : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              Table
-            </button>
-          </div>
+          <Tabs
+            active={view}
+            onChange={(v) => setParams({ view: v })}
+            tabs={[
+              { key: 'timeline', label: 'Timeline' },
+              { key: 'table', label: 'Table' },
+            ]}
+          />
 
           <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
           {/* Pivot toggle */}
-          <div className={clsx('flex bg-gray-100 rounded-lg p-0.5', view === 'table' && 'opacity-50 pointer-events-none')}>
-            <button
-              onClick={() => setParams({ pivot: 'domain' })}
-              className={clsx(
-                'px-3 py-1.5 text-sm rounded-md transition-colors',
-                pivot === 'domain' ? 'bg-white shadow font-medium' : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              By Domain
-            </button>
-            <button
-              onClick={() => setParams({ pivot: 'investor' })}
-              className={clsx(
-                'px-3 py-1.5 text-sm rounded-md transition-colors',
-                pivot === 'investor' ? 'bg-white shadow font-medium' : 'text-gray-500 hover:text-gray-700'
-              )}
-            >
-              By Investor
-            </button>
+          <div className={clsx(view === 'table' && 'opacity-50 pointer-events-none')}>
+            <Tabs
+              active={pivot}
+              onChange={(v) => setParams({ pivot: v })}
+              tabs={[
+                { key: 'domain', label: 'By Domain' },
+                { key: 'investor', label: 'By Investor' },
+              ]}
+            />
           </div>
 
           <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
           {/* Domain filter */}
-          <select
-            className="border rounded-lg px-3 py-1.5 text-sm"
+          <Select
             value={selectedDomain || ''}
-            onChange={(e) => setFilter({ domain: e.target.value })}
-          >
-            <option value="">All domains</option>
-            {domains.map((d) => (
-              <option key={d.domain} value={d.domain}>
-                {d.domain} ({d.count})
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setFilter({ domain: v })}
+            options={[
+              { value: '', label: 'All domains' },
+              ...domains.map((d) => ({ value: d.domain, label: `${d.domain} (${d.count})` })),
+            ]}
+          />
 
           {/* Investor filter */}
-          <select
-            className="border rounded-lg px-3 py-1.5 text-sm"
+          <Select
             value={selectedInvestor || ''}
-            onChange={(e) => setFilter({ investor_id: e.target.value })}
-          >
-            <option value="">All investors</option>
-            {investors.map((inv) => (
-              <option key={inv.id} value={inv.id}>
-                {inv.name}
-              </option>
-            ))}
-          </select>
+            onChange={(v) => setFilter({ investor_id: v })}
+            options={[
+              { value: '', label: 'All investors' },
+              ...investors.map((inv) => ({ value: inv.id, label: inv.name })),
+            ]}
+          />
 
           {/* Year range */}
           <div className="flex items-center gap-2">
-            <input
+            <Input
               type="number"
               placeholder="From year"
-              className="border rounded-lg px-3 py-1.5 text-sm w-24 sm:w-28"
               value={yearFrom || ''}
-              onChange={(e) => setFilter({ year_from: e.target.value || '' })}
+              onChange={(v) => setFilter({ year_from: v || '' })}
               min={2000}
               max={2030}
+              className="w-24 sm:w-28"
             />
             <span className="text-gray-400 text-sm">-</span>
-            <input
+            <Input
               type="number"
               placeholder="To year"
-              className="border rounded-lg px-3 py-1.5 text-sm w-24 sm:w-28"
               value={yearTo || ''}
-              onChange={(e) => setFilter({ year_to: e.target.value || '' })}
+              onChange={(v) => setFilter({ year_to: v || '' })}
               min={2000}
               max={2030}
+              className="w-24 sm:w-28"
             />
           </div>
 
           {hasFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-sm text-hakuna-600 hover:text-hakuna-700 font-medium"
-            >
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
               Clear filters
-            </button>
+            </Button>
           )}
 
           <span className="text-xs text-gray-400 w-full sm:w-auto sm:ml-auto">
             {total} event{total !== 1 ? 's' : ''}
           </span>
         </div>
-      </div>
+      </Card>
 
       {/* Content */}
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Loading timeline...</div>
-      ) : events.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-4xl mb-3">&#128200;</div>
-          <p className="text-lg font-medium text-gray-500">No investment events yet</p>
-          <p className="text-sm mt-1">
-            Run enrichment with website URLs to populate the timeline from press releases
-          </p>
+        <div className="flex items-center justify-center py-12 text-gray-400">
+          <Spinner />
+          <span className="ml-2">Loading timeline...</span>
         </div>
+      ) : events.length === 0 ? (
+        <EmptyState
+          icon={TrendingUp}
+          title="No investment events yet"
+          sub="Run enrichment with website URLs to populate the timeline from press releases"
+        />
       ) : (
         <>
           {view === 'table' ? (
@@ -332,7 +302,7 @@ function PivotGroup({ name, events, pivot, onSelectInvestor }) {
   const domainColor = DOMAIN_COLORS[name.toLowerCase()] || 'bg-gray-100 text-gray-800'
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+    <Card className="overflow-hidden p-0">
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
@@ -348,7 +318,7 @@ function PivotGroup({ name, events, pivot, onSelectInvestor }) {
             {events.length} investment{events.length !== 1 ? 's' : ''}
           </span>
         </div>
-        <span className="text-gray-400 text-sm">{expanded ? '▲' : '▼'}</span>
+        {expanded ? <ChevronUp className="h-4 w-4 text-gray-400" /> : <ChevronDown className="h-4 w-4 text-gray-400" />}
       </button>
 
       {expanded && (
@@ -374,7 +344,7 @@ function PivotGroup({ name, events, pivot, onSelectInvestor }) {
           ))}
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -437,10 +407,10 @@ function EventCard({ event, showInvestor, showDomain, onSelectInvestor }) {
               href={event.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[10px] text-blue-500 hover:underline"
+              className="text-[10px] text-blue-500 hover:underline inline-flex items-center gap-1"
               onClick={(e) => e.stopPropagation()}
             >
-              Source
+              Source <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -450,104 +420,112 @@ function EventCard({ event, showInvestor, showDomain, onSelectInvestor }) {
 }
 
 
-function SortHeader({ label, column, sortCol, sortDir, onSort, align = 'left' }) {
-  const active = sortCol === column
-  const arrow = active ? (sortDir === 'asc' ? '▲' : '▼') : ''
-  return (
-    <th className={clsx('px-4 py-3 font-medium', align === 'right' ? 'text-right' : 'text-left')}>
-      <button
-        onClick={() => onSort(column)}
-        className={clsx(
-          'inline-flex items-center gap-1 uppercase text-xs',
-          active ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
-        )}
-      >
-        {label}
-        <span className="text-[9px]">{arrow}</span>
-      </button>
-    </th>
-  )
-}
-
-
 function TableView({ events, onSelectInvestor, sortCol, sortDir, onSort }) {
-  const headerProps = { sortCol, sortDir, onSort }
+  const columns = [
+    {
+      key: 'date',
+      label: 'Date',
+      sortable: true,
+      render: (_v, ev) => (
+        <span className="text-gray-500 whitespace-nowrap">
+          {ev.event_date
+            ? new Date(ev.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+            : '---'}
+        </span>
+      ),
+    },
+    {
+      key: 'company',
+      label: 'Company',
+      sortable: true,
+      render: (_v, ev) => (
+        <div>
+          <div className="font-medium text-gray-900">{ev.company_name}</div>
+          {ev.headline && ev.headline !== ev.company_name && (
+            <div className="text-xs text-gray-500 line-clamp-1">{ev.headline}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'investor',
+      label: 'Investor',
+      sortable: true,
+      render: (_v, ev) => (
+        <button
+          onClick={(e) => { e.stopPropagation(); onSelectInvestor(ev.investor_id) }}
+          className="text-hakuna-600 hover:text-hakuna-700 font-medium"
+        >
+          {ev.investor_name}
+        </button>
+      ),
+    },
+    {
+      key: 'domain',
+      label: 'Domain',
+      sortable: true,
+      render: (_v, ev) => {
+        const domainColor = ev.domain
+          ? DOMAIN_COLORS[ev.domain.toLowerCase()] || 'bg-gray-100 text-gray-700'
+          : null
+        return domainColor ? (
+          <span className={clsx('px-2 py-0.5 rounded-full text-[10px] font-medium', domainColor)}>
+            {ev.domain}
+          </span>
+        ) : null
+      },
+    },
+    {
+      key: 'stage',
+      label: 'Stage',
+      sortable: true,
+      render: (_v, ev) => <span className="text-gray-600">{ev.round_stage || '---'}</span>,
+    },
+    {
+      key: 'amount',
+      label: 'Round Size',
+      sortable: true,
+      align: 'right',
+      render: (_v, ev) => (
+        <span className="text-green-600 font-medium whitespace-nowrap">
+          {ev.round_size_usd ? `$${(ev.round_size_usd / 1e6).toFixed(1)}M` : '---'}
+        </span>
+      ),
+    },
+    {
+      key: 'source',
+      label: 'Source',
+      sortable: true,
+      render: (_v, ev) => (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">
+            {SOURCE_LABELS[ev.source] || ev.source}
+          </span>
+          {ev.source_url && (
+            <a
+              href={ev.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-500 hover:underline inline-flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Link <ExternalLink className="h-3 w-3" />
+            </a>
+          )}
+        </div>
+      ),
+    },
+  ]
+
   return (
-    <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <SortHeader label="Date" column="date" {...headerProps} />
-              <SortHeader label="Company" column="company" {...headerProps} />
-              <SortHeader label="Investor" column="investor" {...headerProps} />
-              <SortHeader label="Domain" column="domain" {...headerProps} />
-              <SortHeader label="Stage" column="stage" {...headerProps} />
-              <SortHeader label="Round Size" column="amount" align="right" {...headerProps} />
-              <SortHeader label="Source" column="source" {...headerProps} />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {events.map((ev) => {
-              const domainColor = ev.domain
-                ? DOMAIN_COLORS[ev.domain.toLowerCase()] || 'bg-gray-100 text-gray-700'
-                : null
-              return (
-                <tr key={ev.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                    {ev.event_date
-                      ? new Date(ev.event_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                      : '---'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-gray-900">{ev.company_name}</div>
-                    {ev.headline && ev.headline !== ev.company_name && (
-                      <div className="text-xs text-gray-500 line-clamp-1">{ev.headline}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => onSelectInvestor(ev.investor_id)}
-                      className="text-hakuna-600 hover:text-hakuna-700 font-medium"
-                    >
-                      {ev.investor_name}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    {domainColor && (
-                      <span className={clsx('px-2 py-0.5 rounded-full text-[10px] font-medium', domainColor)}>
-                        {ev.domain}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{ev.round_stage || '---'}</td>
-                  <td className="px-4 py-3 text-right text-green-600 font-medium whitespace-nowrap">
-                    {ev.round_size_usd ? `$${(ev.round_size_usd / 1e6).toFixed(1)}M` : '---'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-500">
-                        {SOURCE_LABELS[ev.source] || ev.source}
-                      </span>
-                      {ev.source_url && (
-                        <a
-                          href={ev.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-500 hover:underline"
-                        >
-                          Link
-                        </a>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <Table
+      columns={columns}
+      rows={events}
+      sortBy={sortCol}
+      sortOrder={sortDir}
+      onSort={onSort}
+      emptyMessage="No events"
+    />
   )
 }
 
@@ -562,59 +540,49 @@ function Pager({ page, pageSize, total, totalPages, onPageChange, onPageSizeChan
         <span>
           Showing <strong>{from}</strong>–<strong>{to}</strong> of <strong>{total}</strong>
         </span>
-        <select
+        <Select
           value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="border rounded-lg px-2 py-1 text-sm"
-        >
-          {PAGE_SIZE_OPTIONS.map((s) => (
-            <option key={s} value={s}>{s} / page</option>
-          ))}
-        </select>
+          onChange={(v) => onPageSizeChange(Number(v))}
+          options={PAGE_SIZE_OPTIONS.map((s) => ({ value: s, label: `${s} / page` }))}
+        />
       </div>
       <div className="flex items-center gap-2 flex-wrap">
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(1)}
           disabled={page <= 1}
-          className="px-2 py-1 border rounded disabled:opacity-40"
         >
-          ««
-        </button>
-        <button
+          <ChevronsLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          className="px-2 py-1 border rounded disabled:opacity-40"
         >
-          ‹ Prev
-        </button>
+          <ChevronLeft className="h-4 w-4" /> Prev
+        </Button>
         <span className="px-2">
           Page <strong>{page}</strong> of {totalPages}
         </span>
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
-          className="px-2 py-1 border rounded disabled:opacity-40"
         >
-          Next ›
-        </button>
-        <button
+          Next <ChevronRight className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onPageChange(totalPages)}
           disabled={page >= totalPages}
-          className="px-2 py-1 border rounded disabled:opacity-40"
         >
-          »»
-        </button>
+          <ChevronsRight className="h-4 w-4" />
+        </Button>
       </div>
-    </div>
-  )
-}
-
-
-function StatCard({ label, value }) {
-  return (
-    <div className="bg-white rounded-xl border p-4">
-      <div className="text-2xl font-bold text-gray-900">{value}</div>
-      <div className="text-xs text-gray-400 mt-1">{label}</div>
     </div>
   )
 }
