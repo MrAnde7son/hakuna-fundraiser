@@ -31,6 +31,10 @@ load balancer, no managed SSL, no read replica.
 ```bash
 # 1. Create the state bucket (one-time)
 gsutil mb -p hakuna-prod-2026 -l me-west1 gs://hakuna-terraform-state || true
+# The deployer SA's access to this bucket is then managed by
+# `google_storage_bucket_iam_member.deployer_tfstate` in iam.tf, so make sure
+# to run a full `terraform apply` from a trusted workstation before relying on
+# CI to run `terraform apply` itself.
 
 # 2. Init + apply the registry first so we can push images
 cd terraform

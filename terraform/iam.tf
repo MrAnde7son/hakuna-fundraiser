@@ -67,6 +67,16 @@ resource "google_project_iam_member" "deployer_roles" {
   member  = "serviceAccount:${google_service_account.deployer.email}"
 }
 
+# Deployer needs read/write access to the Terraform state bucket so CI can run
+# `terraform apply` for the worker VM. The bucket itself is created out of band
+# (see README "Bootstrap"), so we bind on it by name rather than referencing a
+# `google_storage_bucket` resource.
+resource "google_storage_bucket_iam_member" "deployer_tfstate" {
+  bucket = "hakuna-terraform-state"
+  role   = "roles/storage.objectUser"
+  member = "serviceAccount:${google_service_account.deployer.email}"
+}
+
 # Pool + provider for GitHub OIDC. The `attribute_condition` restricts it to
 # this specific repo so a leaked workflow in another repo can't impersonate.
 resource "google_iam_workload_identity_pool" "github" {
