@@ -120,11 +120,11 @@ export default function Timeline() {
   const onSelectInvestor = (id) => navigate(`/investors/${id}`)
 
   return (
-    <div className="p-6">
+    <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Investment Timeline</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Investment Timeline</h1>
           <p className="text-sm text-gray-500 mt-1">
             Track when investors made bets across cybersecurity domains
           </p>
@@ -133,7 +133,7 @@ export default function Timeline() {
 
       {/* Stats cards */}
       {stats && (
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
           <StatCard label="Total Events" value={stats.total_events} />
           <StatCard label="Investors Tracked" value={stats.investors_with_events} />
           <StatCard label="Domains" value={Object.keys(stats.by_domain || {}).length} />
@@ -146,8 +146,8 @@ export default function Timeline() {
       )}
 
       {/* Filters bar */}
-      <div className="bg-white rounded-xl border p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="bg-white rounded-xl border p-3 sm:p-4 mb-6">
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
           {/* View toggle */}
           <div className="flex bg-gray-100 rounded-lg p-0.5">
             <button
@@ -170,7 +170,7 @@ export default function Timeline() {
             </button>
           </div>
 
-          <div className="w-px h-6 bg-gray-200" />
+          <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
           {/* Pivot toggle */}
           <div className={clsx('flex bg-gray-100 rounded-lg p-0.5', view === 'table' && 'opacity-50 pointer-events-none')}>
@@ -194,7 +194,7 @@ export default function Timeline() {
             </button>
           </div>
 
-          <div className="w-px h-6 bg-gray-200" />
+          <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
           {/* Domain filter */}
           <select
@@ -225,25 +225,27 @@ export default function Timeline() {
           </select>
 
           {/* Year range */}
-          <input
-            type="number"
-            placeholder="From year"
-            className="border rounded-lg px-3 py-1.5 text-sm w-28"
-            value={yearFrom || ''}
-            onChange={(e) => setFilter({ year_from: e.target.value || '' })}
-            min={2000}
-            max={2030}
-          />
-          <span className="text-gray-400 text-sm">-</span>
-          <input
-            type="number"
-            placeholder="To year"
-            className="border rounded-lg px-3 py-1.5 text-sm w-28"
-            value={yearTo || ''}
-            onChange={(e) => setFilter({ year_to: e.target.value || '' })}
-            min={2000}
-            max={2030}
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              placeholder="From year"
+              className="border rounded-lg px-3 py-1.5 text-sm w-24 sm:w-28"
+              value={yearFrom || ''}
+              onChange={(e) => setFilter({ year_from: e.target.value || '' })}
+              min={2000}
+              max={2030}
+            />
+            <span className="text-gray-400 text-sm">-</span>
+            <input
+              type="number"
+              placeholder="To year"
+              className="border rounded-lg px-3 py-1.5 text-sm w-24 sm:w-28"
+              value={yearTo || ''}
+              onChange={(e) => setFilter({ year_to: e.target.value || '' })}
+              min={2000}
+              max={2030}
+            />
+          </div>
 
           {hasFilters && (
             <button
@@ -254,7 +256,7 @@ export default function Timeline() {
             </button>
           )}
 
-          <span className="text-xs text-gray-400 ml-auto">
+          <span className="text-xs text-gray-400 w-full sm:w-auto sm:ml-auto">
             {total} event{total !== 1 ? 's' : ''}
           </span>
         </div>
@@ -350,14 +352,14 @@ function PivotGroup({ name, events, pivot, onSelectInvestor }) {
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5">
+        <div className="px-3 sm:px-5 pb-5">
           {byYear.map(([year, yearEvents]) => (
             <div key={year} className="mb-4 last:mb-0">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-12 text-xs font-bold text-gray-400">{year}</div>
+                <div className="w-10 sm:w-12 text-xs font-bold text-gray-400">{year}</div>
                 <div className="flex-1 h-px bg-gray-200" />
               </div>
-              <div className="ml-14 space-y-2">
+              <div className="ml-2 sm:ml-14 space-y-2">
                 {yearEvents.map((ev) => (
                   <EventCard
                     key={ev.id}
@@ -387,8 +389,8 @@ function EventCard({ event, showInvestor, showDomain, onSelectInvestor }) {
       {/* Timeline dot */}
       <div className="mt-2 w-2 h-2 rounded-full bg-hakuna-400 shrink-0" />
 
-      <div className="flex-1 border rounded-lg px-4 py-3 hover:border-hakuna-300 transition-colors">
-        <div className="flex items-start justify-between">
+      <div className="flex-1 min-w-0 border rounded-lg px-3 sm:px-4 py-3 hover:border-hakuna-300 transition-colors">
+        <div className="flex items-start justify-between gap-2 flex-wrap">
           <div>
             <span className="font-medium text-sm">{event.company_name}</span>
             {event.round_stage && (
@@ -555,7 +557,7 @@ function Pager({ page, pageSize, total, totalPages, onPageChange, onPageSizeChan
   const from = (page - 1) * pageSize + 1
   const to = Math.min(page * pageSize, total)
   return (
-    <div className="flex items-center justify-between mt-4 text-sm text-gray-600">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-4 text-sm text-gray-600 gap-3">
       <div className="flex items-center gap-3">
         <span>
           Showing <strong>{from}</strong>–<strong>{to}</strong> of <strong>{total}</strong>
@@ -570,7 +572,7 @@ function Pager({ page, pageSize, total, totalPages, onPageChange, onPageSizeChan
           ))}
         </select>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           onClick={() => onPageChange(1)}
           disabled={page <= 1}
