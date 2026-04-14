@@ -50,4 +50,5 @@ jobs:
           ZONE: ${{ vars.GCP_ZONE || 'europe-west1-b' }}
           REPO: hakuna-fundraiser
           GITHUB_SHA: ${{ github.sha }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: scripts/deploy.sh

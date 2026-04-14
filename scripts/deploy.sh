@@ -55,9 +55,17 @@ echo "==> Syncing worker VM metadata to new image tag (terraform)"
 # (Cloud Run has ignore_changes on its image field, so this won't fight the
 # `gcloud run deploy` above.)
 terraform -chdir=terraform init -input=false -upgrade=false
+
+TF_EXTRA=()
+if [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
+  echo "    CLOUDFLARE_API_TOKEN not set — skipping Cloudflare provider"
+  TF_EXTRA+=(-var "cloudflare_zone=")
+fi
+
 terraform -chdir=terraform apply -auto-approve \
   -var "api_image=${API_IMAGE}" \
   -var "frontend_image=${FRONTEND_IMAGE}" \
+  "${TF_EXTRA[@]}" \
   -target=google_compute_instance.worker
 
 echo "==> Rolling worker VM (re-runs startup script, pulls new image)"
